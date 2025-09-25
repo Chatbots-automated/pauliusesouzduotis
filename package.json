@@ -1,0 +1,10 @@
+{
+  "name": "ampeco-rfid-form",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple form to send ED code + RFID rows to n8n webhook",
+  "scripts": {
+    "build": "echo \"nothing to build (static site)\"",
+    "start": "echo \"deploy to Vercel as static\""
+  }
+}
