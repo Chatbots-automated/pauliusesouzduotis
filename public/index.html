@@ -1,97 +1,153 @@
 <!doctype html>
-<html lang="en">
+<html lang="lt">
 <head>
   <meta charset="utf-8" />
-  <title>AMPECO – ED → RFID uploader</title>
+  <title>AMPECO – ED → RFID įkėlimas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; }
-    body { margin: 0; padding: 24px; background: #0f172a; color: #e2e8f0; }
-    .card { max-width: 860px; margin: 0 auto; background: #0b1220; border: 1px solid #1f2a44; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.35);}
-    h1 { margin: 0 0 12px; font-size: 22px; }
-    p { margin: 0 0 16px; color: #9fb0cc; }
-    textarea, input, button { width: 100%; box-sizing: border-box; }
+    :root { 
+      --bg: #0b1220; 
+      --panel: #0d1629; 
+      --muted: #9fb0cc; 
+      --border: #1f2a44; 
+      --accent: #3b82f6; 
+      --good: #22c55e; 
+      --bad: #ef4444; 
+      --text: #e5eefc;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; background: #0f172a; color: var(--text); }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+    header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .logo { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg,#3b82f6,#22c55e); }
+    h1 { margin: 0; font-size: 22px; letter-spacing: .2px; }
+    p.lead { margin: 6px 0 16px; color: var(--muted); line-height: 1.5; }
     label { display: block; font-size: 14px; margin: 16px 0 8px; color: #c7d2fe; }
-    textarea { min-height: 280px; padding: 12px; border-radius: 12px; border: 1px solid #233155; background: #0a1326; color: #e2e8f0; }
-    input { padding: 10px 12px; border-radius: 10px; border: 1px solid #233155; background: #0a1326; color: #e2e8f0; }
-    .row { display: grid; grid-template-columns: 1fr 160px; gap: 12px; align-items: end; }
-    .actions { display: flex; gap: 12px; margin-top: 16px; }
-    button { padding: 12px 16px; border: 0; border-radius: 12px; cursor: pointer; }
-    .primary { background: #3b82f6; color: white; }
-    .secondary { background: #111827; color: #cbd5e1; border: 1px solid #374151; }
-    .muted { color: #93a3bf; font-size: 12px; margin-top: 8px;}
-    .table { width: 100%; margin-top: 14px; border-collapse: collapse; font-size: 14px; }
-    .table th, .table td { border-bottom: 1px solid #1f2a44; padding: 8px 6px; }
-    .ok { color: #22c55e; }
-    .err { color: #ef4444; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    textarea, input { width: 100%; border-radius: 12px; border: 1px solid var(--border); background: #0a1326; color: var(--text); }
+    textarea { min-height: 280px; padding: 12px; resize: vertical; }
+    input { padding: 10px 12px; }
+    .row { display: grid; grid-template-columns: 1fr minmax(280px, 380px); gap: 14px; align-items: end; margin-top: 12px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    button { padding: 12px 16px; border: 0; border-radius: 12px; cursor: pointer; font-weight: 600; }
+    .primary { background: var(--accent); color: white; }
+    .secondary { background: #0f1a31; color: #cbd5e1; border: 1px solid #2a3a61; }
+    .ghost { background: transparent; color: var(--muted); border: 1px dashed #2a3a61; }
+    .muted { color: var(--muted); font-size: 12px; margin-top: 8px;}
+    .meta { display: flex; gap: 14px; align-items: center; color: var(--muted); font-size: 13px; margin: 10px 0 -2px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #0f1a31; border: 1px solid #2a3a61; color: #cbd5e1; font-size: 12px; }
+    .table { width: 100%; margin-top: 14px; border-collapse: collapse; font-size: 14px; border-top: 1px solid var(--border); }
+    .table th, .table td { border-bottom: 1px solid var(--border); padding: 10px 8px; }
+    .table th { text-align: left; color: #c7d2fe; font-weight: 600; }
+    .ok { color: var(--good); font-weight: 600; }
+    .err { color: var(--bad); font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; letter-spacing: .2px; }
+    #status { margin-top: 12px; min-height: 22px; }
+    .status-ok { color: var(--good); }
+    .status-bad { color: var(--bad); }
+    footer { margin-top: 22px; color: var(--muted); font-size: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+    @media (max-width: 860px) {
+      .row { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>ED → RFID uploader</h1>
-    <p>Paste rows exactly like your Google Sheet (two columns): <strong>Keičiama į</strong> and <strong>rfid</strong>. One row per line.<br/>
-    Example: <span class="mono">ED6130&nbsp;&nbsp;04873DA2861395</span> or <span class="mono">ED6130,04873DA2861395</span> or tab-separated.</p>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div class="logo" aria-hidden="true"></div>
+        <h1>ED → RFID įkėlimas</h1>
+      </header>
+      <p class="lead">
+        Įklijuokite eilutes taip pat, kaip „Google Sheets“ faile — dvi skiltys:
+        <strong>Keičiama į</strong> (pvz., <span class="mono">ED6130</span>) ir <strong>rfid</strong>
+        (pvz., <span class="mono">04873DA2861395</span>). Viena eilutė – vienam įrašui.
+        Galima kableliu, tabuliacija arba dviem ir daugiau tarpų atskirtos reikšmės.
+      </p>
 
-    <label for="rows">Rows</label>
-    <textarea id="rows" placeholder="ED6130,04873DA2861395
+      <label for="rows">Eilutės</label>
+      <textarea id="rows" placeholder="ED6130,04873DA2861395
 ED6124,046A63A2861394
 ED6141,049592A2861394"></textarea>
+      <div class="meta">
+        <span class="badge" id="rowsCount">0 eilučių</span>
+        <span class="muted">Patikrinkite, ar kodai <span class="mono">EDxxxx</span> ir RFID yra teisingi (A–F/0–9).</span>
+      </div>
 
-    <div class="row">
-      <div>
-        <label for="webhook">n8n Webhook URL</label>
-        <input id="webhook" type="url"
-               value="https://n8n-up8s.onrender.com/webhook-test/7ac96aa0-fe1d-4da1-940c-c85563e9698a"
-               placeholder="https://.../webhook/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
-        <div class="muted">You can leave this as-is.</div>
+      <div class="row">
+        <div>
+          <label for="webhook">n8n žiniatinklio adresas (Webhook URL)</label>
+          <input id="webhook" type="url"
+                value="https://n8n-up8s.onrender.com/webhook-test/7ac96aa0-fe1d-4da1-940c-c85563e9698a"
+                placeholder="https://.../webhook/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+          <div class="muted">Galite palikti kaip yra.</div>
+        </div>
+        <div class="actions">
+          <button class="secondary" id="preview">Peržiūra</button>
+          <button class="primary" id="send">Siųsti į n8n</button>
+          <button class="ghost" id="pasteSample" type="button">Įklijuoti pavyzdį</button>
+          <button class="ghost" id="clearAll" type="button">Išvalyti</button>
+        </div>
       </div>
-      <div class="actions">
-        <button class="secondary" id="preview">Preview</button>
-        <button class="primary" id="send">Send to n8n</button>
-      </div>
+
+      <div id="status" class="muted" role="status" aria-live="polite"></div>
+
+      <table class="table" id="table" style="display:none">
+        <thead>
+          <tr>
+            <th>Eil.</th>
+            <th>Keičiama į</th>
+            <th>RFID</th>
+            <th>El. paštas</th>
+            <th>Tikrinimas</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <footer>
+        <span>Patvirtinimas: sėkmingai išsiuntus, apačioje matysite serverio atsakymą.</span>
+        <span>Siunčiamas formatas nekeičiant stulpelių pavadinimų: <span class="mono">{ rows: [ { "Keičiama į", "rfid", "email" } ] }</span></span>
+      </footer>
     </div>
-
-    <div id="status" class="muted"></div>
-    <table class="table" id="table" style="display:none">
-      <thead><tr><th>#</th><th>Keičiama į</th><th>rfid</th><th>Email</th><th>Check</th></tr></thead>
-      <tbody></tbody>
-    </table>
   </div>
 
   <script>
     const $rows = document.getElementById('rows');
+    const $rowsCount = document.getElementById('rowsCount');
     const $webhook = document.getElementById('webhook');
     const $preview = document.getElementById('preview');
     const $send = document.getElementById('send');
     const $status = document.getElementById('status');
     const $table = document.getElementById('table');
     const $tbody = $table.querySelector('tbody');
+    const $pasteSample = document.getElementById('pasteSample');
+    const $clearAll = document.getElementById('clearAll');
 
     function parseLines(text) {
       const out = [];
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       for (const line of lines) {
-        // split by comma, tab, or 2+ spaces
+        // skaidom kableliu, tabuliacija arba ≥2 tarpais
         const parts = line.split(/\s*,\s*|\t+|\s{2,}/).map(p => p.trim()).filter(Boolean);
         if (parts.length < 2) { continue; }
         let ed = parts[0].toUpperCase();
         let rfid = parts[1].toUpperCase().replace(/\s+/g, '');
 
-        // normalize ED code "EDxxxx"
-        if (!/^ED\d+$/i.test(ed)) {
-          // try to salvage like "ed 6130"
-          ed = ed.replace(/\s+/g, '');
-        }
-        // basic RFID sanity: hex-like
+        // normalizuojam ED kodą
+        if (!/^ED\d+$/i.test(ed)) ed = ed.replace(/\s+/g, '');
+
+        // RFID – leistini simboliai 0–9, A–F
         if (!/^[0-9A-F]+$/.test(rfid)) {
-          // allow accidental lowercase
           rfid = rfid.replace(/[^0-9A-F]/gi, '').toUpperCase();
         }
+
         out.push({
           "Keičiama į": ed,
           "rfid": rfid,
-          "email": `${ed}@eso.lt` // helpful derived value
+          "email": `${ed}@eso.lt`
         });
       }
       return out;
@@ -101,57 +157,87 @@ ED6141,049592A2861394"></textarea>
       $tbody.innerHTML = '';
       rows.forEach((r, i) => {
         const okEd = /^ED\d+$/.test(r["Keičiama į"]);
-        const okRfid = /^[0-9A-F]+$/.test(r.rfid) && r.rfid.length >= 10; // len check is loose on purpose
+        const okRfid = /^[0-9A-F]+$/.test(r.rfid) && r.rfid.length >= 10;
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${i+1}</td>
           <td class="mono">${r["Keičiama į"]}</td>
           <td class="mono">${r.rfid}</td>
           <td class="mono">${r.email}</td>
-          <td>${okEd && okRfid ? '<span class="ok">ok</span>' : '<span class="err">check</span>'}</td>
+          <td>${okEd && okRfid ? '<span class="ok">gerai</span>' : '<span class="err">tikrinti</span>'}</td>
         `;
         $tbody.appendChild(tr);
       });
       $table.style.display = rows.length ? 'table' : 'none';
+      $rowsCount.textContent = rows.length + (rows.length === 1 ? ' eilutė' : ' eilučių');
     }
 
     async function sendRows(rows) {
-      // Payload keeps the SAME column names as the sheet:
-      // [{ "Keičiama į": "ED6130", "rfid": "04873DA2861395", "email": "ED6130@eso.lt" }, ...]
       const payload = { rows };
       const url = $webhook.value.trim();
+      if (!url) {
+        $status.innerHTML = '<span class="status-bad">Nenurodytas webhook adresas.</span>';
+        return;
+      }
 
-      $status.textContent = 'Sending...';
+      $status.textContent = 'Siunčiama...';
       try {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const text = await res.text(); // n8n may return text/plain or JSON
-        if (!res.ok) throw new Error(text || ('HTTP '+res.status));
-        $status.innerHTML = `<span class="ok">Done.</span> Server said: <span class="mono">${text.slice(0,300)}</span>`;
+        const text = await res.text(); // n8n gali gražinti text/plain
+        if (!res.ok) throw new Error(text || ('HTTP ' + res.status));
+        $status.innerHTML = `<span class="status-ok">Išsiųsta sėkmingai.</span> Serverio atsakymas: <span class="mono">${text.slice(0, 400)}</span>`;
       } catch (e) {
-        $status.innerHTML = `<span class="err">Failed:</span> <span class="mono">${(e && e.message) || e}</span>`;
+        $status.innerHTML = `<span class="status-bad">Siuntimas nepavyko:</span> <span class="mono">${(e && e.message) || e}</span>`;
       }
+    }
+
+    function updateCount() {
+      const rows = parseLines($rows.value);
+      $rowsCount.textContent = rows.length + (rows.length === 1 ? ' eilutė' : ' eilučių');
     }
 
     $preview.addEventListener('click', (e) => {
       e.preventDefault();
       const rows = parseLines($rows.value);
       renderPreview(rows);
-      $status.textContent = rows.length ? `Parsed ${rows.length} rows.` : 'No valid rows found.';
+      $status.textContent = rows.length ? `Išanalizuota: ${rows.length} ${rows.length === 1 ? 'eilutė' : 'eilučių'}.` : 'Eilučių nerasta.';
     });
 
     $send.addEventListener('click', async (e) => {
       e.preventDefault();
       const rows = parseLines($rows.value);
       if (!rows.length) {
-        $status.textContent = 'Nothing to send.';
+        $status.textContent = 'Nėra ką siųsti.';
         return;
       }
       renderPreview(rows);
       await sendRows(rows);
+    });
+
+    $pasteSample.addEventListener('click', () => {
+      $rows.value = `ED6130,04873DA2861395
+ED6124,046A63A2861394
+ED6141,049592A2861394`;
+      updateCount();
+      $status.textContent = 'Pavyzdinės eilutės įklijuotos.';
+    });
+
+    $clearAll.addEventListener('click', () => {
+      $rows.value = '';
+      $tbody.innerHTML = '';
+      $table.style.display = 'none';
+      updateCount();
+      $status.textContent = 'Išvalyta.';
+    });
+
+    $rows.addEventListener('input', updateCount);
+    window.addEventListener('DOMContentLoaded', () => {
+      updateCount();
+      $rows.focus();
     });
   </script>
 </body>
